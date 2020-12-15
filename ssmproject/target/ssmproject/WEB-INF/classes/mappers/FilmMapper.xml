@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.movie.mapper.FilmMapper">
+   <select id="getLastFilms" resultType="Film">
+       select *from film where is_delete=1 order by film_time desc limit 0,#{count}
+   </select>
+
+    <select id="getFilmsByFilmsCategory" resultType="Film">
+        SELECT film.* from film INNER JOIN film_and_type on film.film_id=film_and_type.film_id
+        INNER JOIN film_category ON film_and_type.category_id=film_category.category_id
+        WHERE film_category.category_id=#{category_id} AND film.is_delete=1
+    </select>
+
+    <select id="getAllCount" resultType="int">
+        select count(*) from film where is_delete=1
+        <if test="film_name!=null and film_name!=''">
+            and film_name like '%${film_name}%'
+        </if>
+    </select>
+
+    <select id="getFilms" resultType="Film">
+        select *from film where is_delete=1
+        <if test="film_name!=null and film_name!=''">
+            and film_name like '%${film_name}%'
+        </if>
+        limit #{startPage},#{pageSize}
+    </select>
+
+    <insert id="addFilm" keyProperty="film_id" useGeneratedKeys="true">
+    insert film values (null ,#{film_name},#{film_time},#{director},#{play_time},#{poster_url},#{description},1)
+    </insert>
+
+    <insert id="addFilm_type">
+        insert film_and_type values (null,#{category_id},#{film_id})
+    </insert>
+    <insert id="addScreenWriter_film" >
+        insert screenwriter_film values (null,#{film_id},#{screenwriter_id})
+    </insert>
+    <insert id="addStar" >
+        insert star values (null,#{film_id},#{performer_id})
+    </insert>
+
+
+
+</mapper>

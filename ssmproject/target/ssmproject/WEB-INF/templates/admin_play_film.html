@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="../js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../js/bootstrap.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../js/jquery-2.1.0.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../js/npm.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap-theme.min.css" />
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css" />
+    <script src="../js/3.3.7bootstrap.min.js"></script>
+    <style type="text/css">
+        .container {
+            margin-top: 30px;
+            border: 1px solid #b3a6a6;
+            border-radius: 10px;
+        }
+
+        .tou {
+            background: whitesmoke;
+            height: 30px;
+            line-height: 30px;
+            text-indent: 2em;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            border-bottom: 1px solid #b3a6a6;
+        }
+
+        table {
+            text-align: center;
+            margin-top: 10px;
+            border-top: 1px solid #b3a6a6;
+        }
+
+        table th {
+            text-align: center;
+        }
+
+        button span {
+            color: red;
+        }
+        label {
+            line-height: 35px;
+        }
+
+        .form-group {
+            margin-left: 100px;
+        }
+    </style>
+
+</head>
+<script type="text/javascript">
+   $(function (){
+       $.getJSON(
+           "/getplayrooms",
+           function (result) {
+               for (var i = 0; i < result.length; i++) {
+                   $("#roomnum").append("<option value='"+result[i].room_id+"'>"+result[i].room_name+"</option>>");
+               }
+           }
+       )
+       $.getJSON(
+           "/getallfilmtype",
+           function (result) {
+               for (var i = 0; i < result.length; i++) {
+                   $("#filmtype").append("<option value='"+result[i].category_id+"'>"+result[i].film_category+"</option>>");
+               }
+           }
+       )
+   });
+
+   function getFilms(){
+       var category_id =$("#filmtype").val();
+       if(category_id==0){
+           $("#realfilm").html("<option value='0'>请选择电影</option>");
+       }else {
+           $("#realfilm").html("");
+           $.getJSON(
+               "/getallfilms",
+               {"category_id":category_id},
+               function (result) {
+                   for (var i = 0; i < result.length; i++) {
+                       $("#realfilm").append("<option value='"+result[i].film_id+"'>"+result[i].film_name+"</option>>");
+                   }
+               }
+           )
+       }
+   }
+
+  function addPlayFilm(){
+       var data = $("#addPlayDtoFrom").serialize();
+       alert(JSON.stringify(data));
+       $.getJSON(
+           "/addplaydto",
+          data,
+           function (result){
+               if(result.code==200){
+                   alert(result.message);
+                   window.location.reload();
+               }
+               else {
+                   alert(result.message);
+               }
+           }
+       )
+  }
+   function playdtoState_change(play_id,span){
+       var text=$(span).find("span").text();
+       var is_delete=1;
+
+       if(text=="下档"){
+           is_delete=0;
+       }
+       if(confirm("确定要"+text+"吗？")){
+           $.post(
+               "/playstatechange",
+               {"play_id":play_id,"is_delete":is_delete},
+               function (result){
+                   if(result.code==200){
+                       alert(text+"成功");
+                       window.location.reload();
+                   }else {
+                       alert(text+"失败");
+                   }
+               },"json"
+           )
+       }
+   }
+</script>
+<body>
+<div class="container" style="padding: 0px;width: 80%">
+    <div class="tou"><span class="glyphicon glyphicon-align-justify"></span><span style="font-weight: bold; margin-left: 6px;">操作信息管理</span></div>
+    <table class="table">
+        <caption><span id="sum" style="margin-left: 30px;">共<span th:text="${pageUtil.totalcount}"></span>条</span></caption>
+        <thead>
+        <tr>
+            <th>编号</th>
+            <th>大厅</th>
+            <th>电影</th>
+            <th>售价</th>
+            <th>排期</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody id="table">
+
+            <tr th:each="playdto:${pageUtil.records}">
+                <td id="playId" th:text="${playdto.play_id}">${play.playId}</td>
+                <td id="roomName" th:text="${playdto.room_name}">${play.room.roomName}</td>
+                <td id="filmName" th:text="${playdto.film_name}">${play.film.filmName}</td>
+                <td id="money" th:text="${playdto.money}">${play.money}</td>
+                <td id="playTime" th:text="${playdto.play_time}">${play.playTime}</td>
+                <td>
+                    <button id="but6" th:if="${playdto.is_delete==1}" th:onclick="|playdtoState_change(${playdto.play_id},this)|" type="button" class="btn btn-default" style="border:1px solid red;"><span>下档</span></button>
+                    <button id="but7" th:if="${playdto.is_delete==0}" th:onclick="|playdtoState_change(${playdto.play_id},this)|" type="button" class="btn btn-default" style="border:1px solid green;"><span style="color: green">上映</span></button>
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+    <!--分页-->
+    <div id="fenye" class="panel-footer" style="text-align: center; ">
+        <nav style="height: 35px;">
+            <ul class="pagination" style="margin-top:0px;">
+                <!--页数左<<扩展（上一页按钮）-->
+                <li id="Previous" th:if="${pageUtil.pageIndex>1}">
+                    <a aria-label="Previous" th:href="|/playdto_paging?pageIndex=${pageUtil.pageIndex-1}|">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+
+                <li th:each="num:${pageUtil.numbers}"><a th:style="${pageUtil.pageIndex==num}?'backgound-color:#2aabd2;font-weight: bold;':''" class='|active data' th:href='|/playdto_paging?pageIndex=${num}|' th:text="${num}">XXX</a></li>
+                <!--页数右<<扩展(下一页按钮)-->
+                <li id="li" th:if="${pageUtil.pageIndex<pageUtil.pageCount}">
+
+                    <a aria-label="Next" th:href="|/playdto_paging?pageIndex=${pageUtil.pageIndex+1}|">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+        <div class="clearfix"></div>
+    </div>
+    <div align="center" style="margin-bottom: 10px;padding-top: 10px; border-top: 1px solid #b3a6a6;">
+        <button id="but2" type="button" class="btn btn-success" data-toggle='modal' data-target='#add'  style=" width: 100px; height: 40px; line-height: 30px;">
+            <span class="glyphicon glyphicon-ok"  style="margin-right: 6px; color:white; font-size: 16px;"></span>
+            <span style="color:white; font-weight: 800;font-size: 16px;">添加</span>
+        </button>
+        <!--<button id="butupdate" type="button" class="btn btn-success" style=" width: 200px; height: 40px; line-height: 30px;">
+            <span class="glyphicon glyphicon-ok"  style="margin-right: 6px; color:white; font-size: 16px;"></span>
+            <span id="is" style="color:white; font-weight: 800;font-size: 16px;">查看已下架电影</span>
+        </button>-->
+    </div>
+    <!--添加弹出框 -->
+    <div class="modal fade"  id="add" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="addPlayDtoFrom">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="myModalLabel" style="text-align: center;">添加新档期</h4>
+                </div>
+                <div class="text-center" style="margin-top: 15px; text-align: center;">
+                    <div class="form-group">
+                        <label for="firstname" class="col-sm-3 control-label">大厅</label>
+                        <select id="roomnum" class="form-control" style="margin-left: 0px; display: inherit;width: 230px;" name="room_id">
+                            <option value="0">请选择大厅</option>
+
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="firstname" class="col-sm-3 control-label">大厅</label>
+                        <select id="filmtype" onchange="getFilms()" class="form-control" style="margin-left: 0px; display: inherit;width: 230px;" name="category_id">
+                            <option value="0">请选择电影类型</option>
+
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="firstname" class="col-sm-3 control-label">电影</label>
+                        <select id="realfilm" class="form-control" style="margin-left: 0px; display: inherit;width: 230px;" name="film_id">
+                            <option value="0">请选择电影</option>
+
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="firstname" class="col-sm-3 control-label">售价</label>
+                        <div class="">
+                            <input type="text" name="money" class="form-control" style="margin-left: 0px; display: inherit;width: 230px;" id="money2">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="firstname" class="col-sm-3 control-label">排期时间</label>
+                    <div class="">
+                        <input type="datetime-local" name="play_time"  class="form-control" style="margin-left: 0px; display: inherit;width: 230px;" id="playTime2">
+                    </div>
+                </div>
+                <div class="modal-footer" style="text-align: center;">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button id="but4" type="button" class="btn btn-danger" onclick="addPlayFilm()">添加</button>
+                </div>
+            </div>
+            </form>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+</div>
+</body>
+
+</html>
